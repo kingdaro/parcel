@@ -1,7 +1,9 @@
 const fs = require('./fs');
 const path = require('path');
+const parseJson = require('parse-json');
+const stripJsonComments = require('strip-json-comments');
 
-const existsCache = new Map;
+const existsCache = new Map();
 
 async function resolve(filepath, filenames, root = path.parse(filepath).root) {
   filepath = path.dirname(filepath);
@@ -13,7 +15,9 @@ async function resolve(filepath, filenames, root = path.parse(filepath).root) {
 
   for (const filename of filenames) {
     let file = path.join(filepath, filename);
-    let exists = existsCache.has(file) ? existsCache.get(file) : await fs.exists(file);
+    let exists = existsCache.has(file)
+      ? existsCache.get(file)
+      : await fs.exists(file);
     if (exists) {
       existsCache.set(file, true);
       return file;
@@ -32,7 +36,8 @@ async function load(filepath, filenames, root = path.parse(filepath).root) {
       return require(configFile);
     }
 
-    return JSON.parse(await fs.readFile(configFile));
+    let configStream = await fs.readFile(configFile);
+    return parseJson(stripJsonComments(configStream.toString()));
   }
 
   return null;

@@ -4,6 +4,14 @@
   </a>
 </p>
 
+[![Travis CI Build Status](https://travis-ci.org/parcel-bundler/parcel.svg?branch=master)](https://travis-ci.org/parcel-bundler/parcel)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/nr7d6qjxj3wwsw6n?svg=true)](https://ci.appveyor.com/project/devongovett/parcel)
+[![David Dependancy Status](https://david-dm.org/parcel-bundler/parcel.svg)](https://david-dm.org/parcel-bundler/parcel)
+[![npm package](https://img.shields.io/npm/v/parcel-bundler.svg)](https://www.npmjs.com/package/parcel-bundler)
+[![npm package](https://img.shields.io/npm/dm/parcel-bundler.svg)](https://www.npmjs.com/package/parcel-bundler)
+[![Slack](https://slack.parceljs.org/badge.svg)](https://slack.parceljs.org)
+[![Twitter Follow](https://img.shields.io/twitter/follow/parceljs.svg?style=social)](https://twitter.com/parceljs)
+
 ## Features
 
 - 🚀 **Blazing fast** bundle times - multicore compilation, and a filesystem cache for fast rebuilds even after a restart.
@@ -68,9 +76,16 @@ Finally, existing bundlers are built around string loaders/transforms, where the
 
 `parcel` takes as input a single entry asset, which could be any type: a JS file, HTML, CSS, image, etc. There are various asset types defined in `parcel` which know how to handle specific file types. The assets are parsed, their dependencies are  extracted, and they are transformed to their final compiled form. This creates a tree of assets.
 
-Once the asset tree as been constructed, the assets are placed into a bundle tree. A bundle is created for the entry asset, and child bundles are created for dynamic imports, which cause code splitting to occur. Child bundles are also created when assets of a different type are imported, for example if you imported a CSS file from JavaScript, it would be placed into a sibling bundle to the corresponding JavaScript. If an asset is required in more than one bundle, it is hoisted up to the nearest common ancestor in the bundle tree so it is not included more than once.
+Once the asset tree has been constructed, the assets are placed into a bundle tree. A bundle is created for the entry asset, and child bundles are created for dynamic imports, which cause code splitting to occur. Child bundles are also created when assets of a different type are imported, for example if you imported a CSS file from JavaScript, it would be placed into a sibling bundle to the corresponding JavaScript. If an asset is required in more than one bundle, it is hoisted up to the nearest common ancestor in the bundle tree so it is not included more than once.
 
 After the bundle tree is constructed, each bundle is written to a file by a packager specific to the file type. The packagers know how to combine the code from each asset together into the final file that is loaded by a browser.
+
+## Community
+
+All feedback and suggestions are welcome!
+
+- 💬 Chat: Join us on [slack](https://slack.parceljs.org/).
+- 📣 Stay up to date on new features and announcements on [@parceljs](https://twitter.com/parceljs).
 
 ## License
 

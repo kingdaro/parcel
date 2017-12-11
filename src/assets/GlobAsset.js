@@ -12,13 +12,23 @@ class GlobAsset extends Asset {
   }
 
   async load() {
-    let files = await globPromise(this.name, {strict: true, nodir: true});
-    let re = micromatch.makeRe(this.name, {capture: true});
+    let regularExpressionSafeName = this.name;
+    if (process.platform === 'win32')
+      regularExpressionSafeName = regularExpressionSafeName.replace(/\\/g, '/');
+
+    let files = glob.sync(regularExpressionSafeName, {
+      strict: true,
+      nodir: true
+    });
+    let re = micromatch.makeRe(regularExpressionSafeName, {capture: true});
     let matches = {};
 
     for (let file of files) {
       let match = file.match(re);
-      let parts = match.slice(1).filter(Boolean).reduce((a, p) => a.concat(p.split('/')), []);
+      let parts = match
+        .slice(1)
+        .filter(Boolean)
+        .reduce((a, p) => a.concat(p.split('/')), []);
       let relative = './' + path.relative(path.dirname(this.name), file);
       set(matches, parts, relative);
       this.addDependency(relative);
@@ -47,7 +57,10 @@ function generate(matches, indent = '') {
       res += ',';
     }
 
-    res += `\n${indent}  ${JSON.stringify(key)}: ${generate(matches[key], indent + '  ')}`;
+    res += `\n${indent}  ${JSON.stringify(key)}: ${generate(
+      matches[key],
+      indent + '  '
+    )}`;
     first = false;
   }
 

@@ -6,19 +6,41 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 
-beforeEach(function () {
-  rimraf.sync(path.join(__dirname, 'dist'));
+beforeEach(function(done) {
+  const finalize = () => {
+    rimraf.sync(path.join(__dirname, 'dist'));
+    done();
+  };
+
+  // Test run in a single process, creating and deleting the same file(s)
+  // Windows needs a delay for the file handles to be released before deleting
+  // is possible. Without a delay, rimraf fails on `beforeEach` for `/dist`
+  if (process.platform === 'win32') {
+    sleep(50).then(finalize);
+  } else {
+    finalize();
+  }
 });
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function bundler(file, opts) {
-  return new Bundler(file, Object.assign({
-    outDir: path.join(__dirname, 'dist'),
-    watch: false,
-    cache: false,
-    killWorkers: false,
-    hmr: false,
-    logLevel: 0
-  }, opts));
+  return new Bundler(
+    file,
+    Object.assign(
+      {
+        outDir: path.join(__dirname, 'dist'),
+        watch: false,
+        cache: false,
+        killWorkers: false,
+        hmr: false,
+        logLevel: 0
+      },
+      opts
+    )
+  );
 }
 
 function bundle(file, opts) {
@@ -33,25 +55,33 @@ function run(bundle, globals) {
     },
 
     getElementsByTagName() {
-      return [{
-        appendChild(el) {
-          setTimeout(function () {
-            if (el.tag === 'script') {
-              vm.runInContext(fs.readFileSync(path.join(__dirname, 'dist', el.src)), ctx);
-            }
+      return [
+        {
+          appendChild(el) {
+            setTimeout(function() {
+              if (el.tag === 'script') {
+                vm.runInContext(
+                  fs.readFileSync(path.join(__dirname, 'dist', el.src)),
+                  ctx
+                );
+              }
 
-            el.onload();
-          }, 0);
+              el.onload();
+            }, 0);
+          }
         }
-      }]
+      ];
     }
   };
 
-  var ctx = Object.assign({
-    document: fakeDocument,
-    WebSocket,
-    console
-  }, globals);
+  var ctx = Object.assign(
+    {
+      document: fakeDocument,
+      WebSocket,
+      console
+    },
+    globals
+  );
 
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(bundle.name), ctx);
@@ -68,11 +98,22 @@ function assertBundleTree(bundle, tree) {
   }
 
   if (tree.assets) {
-    assert.deepEqual(Array.from(bundle.assets).map(a => a.basename).sort(), tree.assets.sort());
+    assert.deepEqual(
+      Array.from(bundle.assets)
+        .map(a => a.basename)
+        .sort(),
+      tree.assets.sort()
+    );
   }
 
   if (tree.childBundles) {
-    let children = Array.from(bundle.childBundles).sort((a, b) => Array.from(a.assets).sort()[0].basename < Array.from(b.assets).sort()[0].basename ? -1 : 1);
+    let children = Array.from(bundle.childBundles).sort(
+      (a, b) =>
+        Array.from(a.assets).sort()[0].basename <
+        Array.from(b.assets).sort()[0].basename
+          ? -1
+          : 1
+    );
     assert.equal(bundle.childBundles.size, tree.childBundles.length);
     tree.childBundles.forEach((b, i) => assertBundleTree(children[i], b));
   }
@@ -82,6 +123,7 @@ function assertBundleTree(bundle, tree) {
   }
 }
 
+exports.sleep = sleep;
 exports.bundler = bundler;
 exports.bundle = bundle;
 exports.run = run;
